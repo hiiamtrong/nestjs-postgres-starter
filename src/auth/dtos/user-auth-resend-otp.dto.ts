@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class UserAuthResendOtpInput {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
-  readonly phone: string;
+  @IsEmail()
+  readonly email: string;
 }

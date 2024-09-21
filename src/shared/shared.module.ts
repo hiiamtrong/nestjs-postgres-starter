@@ -11,6 +11,7 @@ import {
 } from 'src/auth/constants/strategy.constant';
 import { AppConfigModule } from 'src/shared/configs/config.module';
 import { AppConfigService } from 'src/shared/configs/config.service';
+import { BaseApiResponseInterceptor } from 'src/shared/filters/all-responses.filter';
 import { TransactionalConnection } from 'src/shared/transactional/transactional';
 
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
@@ -68,6 +69,10 @@ import { AppLoggerModule } from './logger/logger.module';
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: BaseApiResponseInterceptor,
     },
     TransactionalConnection,
   ],

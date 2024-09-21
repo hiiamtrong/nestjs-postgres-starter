@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { AppExceptionCode, getAppException } from 'src/shared/exceptions/app.exception';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 
 import { User } from '../entities/user.entity';
@@ -17,7 +18,7 @@ export class UserRepository extends Repository<User> {
       .getOne();
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw getAppException(AppExceptionCode.USER_NOT_FOUND);
     }
 
     return user;

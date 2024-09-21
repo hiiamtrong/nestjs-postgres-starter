@@ -1,7 +1,5 @@
 import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
+  Injectable
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { plainToInstance } from 'class-transformer';
@@ -12,6 +10,10 @@ import { AppConfigService } from 'src/shared/configs/config.service';
 import { TransactionalConnection } from 'src/shared/transactional/transactional';
 import { UserStatus } from 'src/user/entities/user.entity';
 
+import {
+  AppExceptionCode,
+  getAppException,
+} from '../../shared/exceptions/app.exception';
 import { AppLogger } from '../../shared/logger/logger.service';
 import { RequestContext } from '../../shared/request-context/request-context.dto';
 import { UserOutput } from '../../user/dtos/user-output.dto';
@@ -40,19 +42,15 @@ export class UserAuthService {
 
   async validateUser(
     ctx: RequestContext,
-    phone: string,
+    email: string,
     pass: string,
   ): Promise<UserAccessTokenClaims> {
     this.logger.log(ctx, `${this.validateUser.name} was called`);
 
-    // The userService will throw Unauthorized in case of invalid phone/password.
-    const user = await this.userService.validatePhonePassword(ctx, phone, pass);
+    const user = await this.userService.validateEmailPassword(ctx, email, pass);
 
-    // Prevent disabled users from logging in.
     if (user.status !== UserStatus.ACTIVE) {
-      throw new ForbiddenException(
-        'This user account has been disabled or deleted',
-      );
+      throw getAppException(AppExceptionCode.USER_NOT_ACTIVE);
     }
 
     return user;
@@ -78,7 +76,7 @@ export class UserAuthService {
       );
 
       // Generate OTP
-      await this.otpService.sendPhoneOtp(registeredUser.phone);
+      await this.otpService.sendEmailOtp(registeredUser.email);
 
       await queryRunner.commitTransaction();
 
@@ -95,49 +93,49 @@ export class UserAuthService {
 
   async verifyOtp(
     ctx: RequestContext,
-    phone: string,
+    email: string,
     otp: string,
   ): Promise<UserAuthVerityOtpOutput> {
     this.logger.log(ctx, `${this.verifyOtp.name} was called`);
 
-    let user = await this.userService.findByPhone(ctx, phone);
+    let user = await this.userService.findByEmail(ctx, email);
     if (!user) {
-      throw new BadRequestException('Invalid phone number');
+      throw getAppException(AppExceptionCode.USER_NOT_FOUND);
     }
 
     if (user.status === UserStatus.ACTIVE) {
-      throw new BadRequestException('User is already active');
+      throw getAppException(AppExceptionCode.USER_ALREADY_ACTIVE);
     }
 
-    const isOtpValid = await this.otpService.verifyPhoneOtp(phone, otp);
+    const isOtpValid = await this.otpService.verifyEmailOtp(email, otp);
     if (!isOtpValid) {
-      throw new BadRequestException('Invalid OTP');
+      throw getAppException(AppExceptionCode.USER_OTP_INCORRECT);
     }
 
     // Update user status to active
     user = await this.userService.updateStatus(ctx, user.id, UserStatus.ACTIVE);
 
     // Delete the OTP from cache
-    await this.otpService.clearPhoneOtp(phone);
+    await this.otpService.clearEmailOtp(email);
 
     return plainToInstance(UserAuthVerityOtpOutput, user, {
       excludeExtraneousValues: true,
     });
   }
 
-  async resendOtp(ctx: RequestContext, phone: string): Promise<void> {
+  async resendOtp(ctx: RequestContext, email: string): Promise<void> {
     this.logger.log(ctx, `${this.resendOtp.name} was called`);
 
-    const user = await this.userService.findByPhone(ctx, phone);
+    const user = await this.userService.findByEmail(ctx, email);
     if (!user) {
-      throw new BadRequestException('Invalid phone number');
+      throw getAppException(AppExceptionCode.USER_NOT_FOUND);
     }
 
     if (user.status === UserStatus.ACTIVE) {
-      throw new BadRequestException('User is already active');
+      throw getAppException(AppExceptionCode.USER_ALREADY_ACTIVE);
     }
 
-    await this.otpService.sendPhoneOtp(phone);
+    await this.otpService.sendEmailOtp(email);
   }
 
   async refreshToken(ctx: RequestContext): Promise<UserAuthTokenOutput> {
@@ -145,21 +143,21 @@ export class UserAuthService {
 
     const user = await this.userService.findById(ctx, ctx.user.id);
     if (!user) {
-      throw new BadRequestException('Invalid user id');
+      throw getAppException(AppExceptionCode.USER_NOT_FOUND);
     }
 
     return this.getAuthToken(ctx, user);
   }
 
-  async forgotPassword(ctx: RequestContext, phone: string): Promise<void> {
+  async forgotPassword(ctx: RequestContext, email: string): Promise<void> {
     this.logger.log(ctx, `${this.forgotPassword.name} was called`);
 
-    const user = await this.userService.findByPhone(ctx, phone);
+    const user = await this.userService.findByEmail(ctx, email);
     if (!user) {
-      throw new BadRequestException('Invalid phone number');
+      throw getAppException(AppExceptionCode.USER_NOT_FOUND);
     }
 
-    await this.otpService.sendPhoneOtp(phone);
+    await this.otpService.sendEmailOtp(email);
   }
 
   async resetPassword(
@@ -168,21 +166,21 @@ export class UserAuthService {
   ): Promise<void> {
     this.logger.log(ctx, `${this.resetPassword.name} was called`);
 
-    const user = await this.userService.findByPhone(ctx, input.phone);
+    const user = await this.userService.findByEmail(ctx, input.email);
     if (!user) {
-      throw new BadRequestException('Invalid phone number');
+      throw getAppException(AppExceptionCode.USER_NOT_FOUND);
     }
 
-    const isOtpValid = await this.otpService.verifyPhoneOtp(
-      input.phone,
+    const isOtpValid = await this.otpService.verifyEmailOtp(
+      input.email,
       input.otp,
     );
     if (!isOtpValid) {
-      throw new BadRequestException('Invalid OTP');
+      throw getAppException(AppExceptionCode.USER_OTP_INCORRECT);
     }
 
     await this.userService.updatePassword(ctx, user.id, input.password);
-    await this.otpService.clearPhoneOtp(input.phone);
+    await this.otpService.clearEmailOtp(input.email);
   }
 
   getAuthToken(
@@ -193,7 +191,7 @@ export class UserAuthService {
 
     const subject = { sub: user.id };
     const payload = {
-      username: user.username,
+      email: user.email,
       sub: user.id,
     };
 

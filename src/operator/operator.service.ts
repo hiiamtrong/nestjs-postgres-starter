@@ -1,11 +1,16 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
 import { OperatorOutput } from 'src/operator/dtos/operator.dto';
 import { OperatorStatus } from 'src/operator/entities/operator.entity';
 import { OperatorRepository } from 'src/operator/operator.repository';
+import {
+  AppExceptionCode,
+  getAppException,
+} from 'src/shared/exceptions/app.exception';
 import { AppLogger } from 'src/shared/logger/logger.service';
 import { RequestContext } from 'src/shared/request-context/request-context.dto';
+
 @Injectable()
 export class OperatorService {
   constructor(
@@ -24,10 +29,10 @@ export class OperatorService {
 
     this.logger.log(ctx, `calling ${OperatorRepository.name}.findOne`);
     const operator = await this.repository.findOne({ where: { email } });
-    if (!operator) throw new BadRequestException();
+    if (!operator) throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
 
     const match = await compare(pass, operator.password);
-    if (!match) throw new BadRequestException();
+    if (!match) throw getAppException(AppExceptionCode.OPERATOR_PASSWORD_INCORRECT);
 
     return plainToInstance(OperatorOutput, operator, {
       excludeExtraneousValues: true,
@@ -39,6 +44,7 @@ export class OperatorService {
 
     this.logger.log(ctx, `calling ${OperatorRepository.name}.getById`);
     const operator = await this.repository.findOneBy({ id });
+    if (!operator) throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
     return plainToInstance(OperatorOutput, operator, {
       excludeExtraneousValues: true,
     });
@@ -49,6 +55,7 @@ export class OperatorService {
 
     this.logger.log(ctx, `calling ${OperatorRepository.name}.findOne`);
     const operator = await this.repository.findOne({ where: { email } });
+    if (!operator) throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
     return plainToInstance(OperatorOutput, operator, {
       excludeExtraneousValues: true,
     });
@@ -59,6 +66,7 @@ export class OperatorService {
 
     this.logger.log(ctx, `calling ${OperatorRepository.name}.getById`);
     const operator = await this.repository.getById(id);
+    if (!operator) throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
 
     operator.status = status;
 
@@ -78,6 +86,7 @@ export class OperatorService {
 
     this.logger.log(ctx, `calling ${OperatorRepository.name}.getById`);
     const operator = await this.repository.getById(id);
+    if (!operator) throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
 
     operator.password = await this.hashPassword(password);
 

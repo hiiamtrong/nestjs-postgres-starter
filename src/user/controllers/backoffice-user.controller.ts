@@ -23,7 +23,6 @@ import { USER_PERMISSIONS } from 'src/permission/permission.constant';
 import { PermissionsGuard } from '../../auth/guards/permissions.guard';
 import {
   BaseApiErrorResponse,
-  BaseApiResponse,
   SwaggerBaseApiResponse,
 } from '../../shared/dtos/base-api-response.dto';
 import { PaginationParamsDto } from '../../shared/dtos/pagination-params.dto';
@@ -63,7 +62,7 @@ export class BackOfficeUserController {
   async getUsers(
     @ReqContext() ctx: RequestContext,
     @Query() query: PaginationParamsDto,
-  ): Promise<BaseApiResponse<UserOutput[]>> {
+  ): Promise<{ users: UserOutput[]; count: number }> {
     this.logger.log(ctx, `${this.getUsers.name} was called`);
 
     const { users, count } = await this.userService.getUsers(
@@ -72,7 +71,10 @@ export class BackOfficeUserController {
       query.offset,
     );
 
-    return { data: users, meta: { count } };
+    return {
+      users,
+      count,
+    };
   }
 
   @Permissions(USER_PERMISSIONS.MANAGE, USER_PERMISSIONS.READ)
@@ -92,11 +94,11 @@ export class BackOfficeUserController {
   async getUser(
     @ReqContext() ctx: RequestContext,
     @Param('id') id: number,
-  ): Promise<BaseApiResponse<UserOutput>> {
+  ): Promise<UserOutput> {
     this.logger.log(ctx, `${this.getUser.name} was called`);
 
     const user = await this.userService.getUserById(ctx, id);
-    return { data: user, meta: {} };
+    return user;
   }
 
   @Patch(':id')
@@ -117,10 +119,10 @@ export class BackOfficeUserController {
     @ReqContext() ctx: RequestContext,
     @Param('id') userId: number,
     @Body() input: BackofficeUpdateUserInput,
-  ): Promise<BaseApiResponse<UserOutput>> {
+  ): Promise<UserOutput> {
     this.logger.log(ctx, `${this.updateUser.name} was called`);
 
     const user = await this.userService.updateUser(ctx, userId, input);
-    return { data: user, meta: {} };
+    return user;
   }
 }

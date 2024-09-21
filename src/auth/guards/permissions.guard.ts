@@ -1,10 +1,9 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import {
+  AppExceptionCode,
+  getAppException,
+} from 'src/shared/exceptions/app.exception';
 
 import { ROLE } from '../constants/role.constant';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
@@ -32,8 +31,6 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    throw new ForbiddenException(
-      `User with roles ${user.role} does not have access to this route with roles ${requiredPermissions}`,
-    );
+    throw getAppException(AppExceptionCode.OPERATOR_NOT_AUTHORIZED);
   }
 }

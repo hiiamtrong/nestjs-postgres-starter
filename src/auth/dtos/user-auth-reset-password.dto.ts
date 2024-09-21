@@ -5,7 +5,7 @@ export class UserResetPasswordInput {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  phone: string;
+  email: string;
 
   @ApiProperty()
   @IsString()

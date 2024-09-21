@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { plainToInstance } from 'class-transformer';
 import { OperatorResetPasswordInput } from 'src/auth/dtos/operator-auth-reset-password.dto';
@@ -18,6 +14,10 @@ import { OperatorService } from 'src/operator/operator.service';
 import { AppConfigService } from 'src/shared/configs/config.service';
 import { TransactionalConnection } from 'src/shared/transactional/transactional';
 
+import {
+  AppExceptionCode,
+  getAppException,
+} from '../../shared/exceptions/app.exception';
 import { AppLogger } from '../../shared/logger/logger.service';
 import { RequestContext } from '../../shared/request-context/request-context.dto';
 
@@ -49,9 +49,7 @@ export class OperatorAuthService {
 
     // Prevent disabled users from logging in.
     if (operator.status !== OperatorStatus.ACTIVE) {
-      throw new ForbiddenException(
-        'This operator account has been disabled or deleted',
-      );
+      throw getAppException(AppExceptionCode.OPERATOR_NOT_ACTIVE);
     }
 
     return operator;
@@ -72,19 +70,18 @@ export class OperatorAuthService {
 
     let operator = await this.operatorService.findByEmail(ctx, email);
     if (!operator) {
-      throw new BadRequestException('Invalid email number');
+      throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
     }
 
     if (operator.status === OperatorStatus.ACTIVE) {
-      throw new BadRequestException('Operator is already active');
+      throw getAppException(AppExceptionCode.OPERATOR_ALREADY_ACTIVE);
     }
 
-    const isOtpValid = await this.otpService.verifyPhoneOtp(email, otp);
+    const isOtpValid = await this.otpService.verifyEmailOtp(email, otp);
     if (!isOtpValid) {
-      throw new BadRequestException('Invalid OTP');
+      throw getAppException(AppExceptionCode.OPERATOR_OTP_INCORRECT);
     }
 
-    // Update user status to active
     operator = await this.operatorService.updateStatus(
       ctx,
       operator.id,
@@ -104,11 +101,11 @@ export class OperatorAuthService {
 
     const operator = await this.operatorService.findByEmail(ctx, email);
     if (!operator) {
-      throw new BadRequestException('Invalid email number');
+      throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
     }
 
     if (operator.status === OperatorStatus.ACTIVE) {
-      throw new BadRequestException('Operator is already active');
+      throw getAppException(AppExceptionCode.OPERATOR_ALREADY_ACTIVE);
     }
 
     await this.otpService.sendEmailOtp(email);
@@ -119,7 +116,7 @@ export class OperatorAuthService {
 
     const user = await this.operatorService.findById(ctx, ctx.user.id);
     if (!user) {
-      throw new BadRequestException('Invalid user id');
+      throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
     }
 
     return this.getAuthToken(ctx, user);
@@ -130,7 +127,7 @@ export class OperatorAuthService {
 
     const operator = await this.operatorService.findByEmail(ctx, email);
     if (!operator) {
-      throw new BadRequestException('Invalid email number');
+      throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
     }
 
     await this.otpService.sendEmailOtp(email);
@@ -144,7 +141,7 @@ export class OperatorAuthService {
 
     const operator = await this.operatorService.findByEmail(ctx, input.email);
     if (!operator) {
-      throw new BadRequestException('Invalid phone number');
+      throw getAppException(AppExceptionCode.OPERATOR_NOT_FOUND);
     }
 
     const isOtpValid = await this.otpService.verifyEmailOtp(
@@ -152,7 +149,7 @@ export class OperatorAuthService {
       input.otp,
     );
     if (!isOtpValid) {
-      throw new BadRequestException('Invalid OTP');
+      throw getAppException(AppExceptionCode.OPERATOR_OTP_INCORRECT);
     }
 
     await this.operatorService.updatePassword(ctx, operator.id, input.password);

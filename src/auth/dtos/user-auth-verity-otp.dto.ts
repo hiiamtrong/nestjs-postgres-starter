@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { UserOutput } from 'src/user/dtos/user-output.dto';
 
 export class UserAuthVerityOtpInput {
@@ -11,7 +11,8 @@ export class UserAuthVerityOtpInput {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
-  readonly phone: string;
+  @IsEmail()
+  readonly email: string;
 }
 
 export class UserAuthVerityOtpOutput extends UserOutput {}

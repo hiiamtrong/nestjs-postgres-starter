@@ -20,7 +20,6 @@ import {
 
 import {
   BaseApiErrorResponse,
-  BaseApiResponse,
   SwaggerBaseApiResponse,
 } from '../../shared/dtos/base-api-response.dto';
 import { AppLogger } from '../../shared/logger/logger.service';
@@ -64,11 +63,11 @@ export class UserAuthController {
     @ReqContext() ctx: RequestContext,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Body() credential: UserLoginInput,
-  ): BaseApiResponse<UserAuthTokenOutput> {
+  ): UserAuthTokenOutput {
     this.logger.log(ctx, `${this.login.name} was called`);
 
     const authToken = this.authService.login(ctx);
-    return { data: authToken, meta: {} };
+    return authToken;
   }
 
   @Post('register')
@@ -82,9 +81,9 @@ export class UserAuthController {
   async registerLocal(
     @ReqContext() ctx: RequestContext,
     @Body() input: UserRegisterInput,
-  ): Promise<BaseApiResponse<UserRegisterOutput>> {
+  ): Promise<UserRegisterOutput> {
     const registeredUser = await this.authService.register(ctx, input);
-    return { data: registeredUser, meta: {} };
+    return registeredUser;
   }
 
   @Post('verify-otp')
@@ -102,9 +101,9 @@ export class UserAuthController {
   async verifyOtp(
     @ReqContext() ctx: RequestContext,
     @Body() input: UserAuthVerityOtpInput,
-  ): Promise<BaseApiResponse<UserAuthVerityOtpOutput>> {
-    const res = await this.authService.verifyOtp(ctx, input.phone, input.otp);
-    return { data: res, meta: {} };
+  ): Promise<UserAuthVerityOtpOutput> {
+    const res = await this.authService.verifyOtp(ctx, input.email, input.otp);
+    return res;
   }
 
   @Post('resend-otp')
@@ -122,9 +121,9 @@ export class UserAuthController {
   async resendOtp(
     @ReqContext() ctx: RequestContext,
     @Body() input: UserAuthResendOtpInput,
-  ): Promise<BaseApiResponse<void>> {
-    await this.authService.resendOtp(ctx, input.phone);
-    return { data: null, meta: {} };
+  ): Promise<void> {
+    await this.authService.resendOtp(ctx, input.email);
+    return;
   }
 
   @Post('forgot-password')
@@ -142,9 +141,9 @@ export class UserAuthController {
   async forgotPassword(
     @ReqContext() ctx: RequestContext,
     @Body() input: UserForgotPasswordInput,
-  ): Promise<BaseApiResponse<void>> {
-    await this.authService.forgotPassword(ctx, input.phone);
-    return { data: null, meta: {} };
+  ): Promise<void> {
+    await this.authService.forgotPassword(ctx, input.email);
+    return;
   }
 
   @Post('reset-password')
@@ -162,9 +161,8 @@ export class UserAuthController {
   async resetPassword(
     @ReqContext() ctx: RequestContext,
     @Body() input: UserResetPasswordInput,
-  ): Promise<BaseApiResponse<void>> {
+  ): Promise<void> {
     await this.authService.resetPassword(ctx, input);
-    return { data: null, meta: {} };
   }
 
   @Post('refresh-token')
@@ -186,10 +184,10 @@ export class UserAuthController {
     @ReqContext() ctx: RequestContext,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Body() credential: UserRefreshTokenInput,
-  ): Promise<BaseApiResponse<UserAuthTokenOutput>> {
+  ): Promise<UserAuthTokenOutput> {
     this.logger.log(ctx, `${this.refreshToken.name} was called`);
 
     const authToken = await this.authService.refreshToken(ctx);
-    return { data: authToken, meta: {} };
+    return authToken;
   }
 }

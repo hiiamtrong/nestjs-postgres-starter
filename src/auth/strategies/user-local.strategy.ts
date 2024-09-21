@@ -18,9 +18,8 @@ export class UserLocalStrategy extends PassportStrategy(
     private authService: UserAuthService,
     private readonly logger: AppLogger,
   ) {
-    // Add option passReqToCallback: true to configure strategy to be request-scoped.
     super({
-      usernameField: 'phone',
+      usernameField: 'email',
       passwordField: 'password',
       passReqToCallback: true,
     });
@@ -29,14 +28,14 @@ export class UserLocalStrategy extends PassportStrategy(
 
   async validate(
     request: Request,
-    phone: string,
+    email: string,
     password: string,
   ): Promise<UserAccessTokenClaims> {
     const ctx = createRequestContext(request);
 
     this.logger.log(ctx, `${this.validate.name} was called`);
 
-    const user = await this.authService.validateUser(ctx, phone, password);
+    const user = await this.authService.validateUser(ctx, email, password);
     return user;
   }
 }

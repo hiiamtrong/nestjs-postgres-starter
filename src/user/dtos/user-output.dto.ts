@@ -29,18 +29,6 @@ export class UserOutput {
 
   @Expose()
   @ApiProperty()
-  balance: number;
-
-  @Expose()
-  @ApiProperty()
-  lockedBalance: number;
-
-  @Expose()
-  @ApiProperty()
-  pendingBalance: number;
-
-  @Expose()
-  @ApiProperty()
   createdAt: string;
 
   @Expose()

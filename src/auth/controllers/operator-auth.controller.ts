@@ -25,7 +25,6 @@ import { OperatorAuthService } from 'src/auth/services/operator-auth.service';
 
 import {
   BaseApiErrorResponse,
-  BaseApiResponse,
   SwaggerBaseApiResponse,
 } from '../../shared/dtos/base-api-response.dto';
 import { AppLogger } from '../../shared/logger/logger.service';
@@ -60,11 +59,11 @@ export class OperatorAuthController {
     @ReqContext() ctx: RequestContext,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Body() credential: OperatorLoginInput,
-  ): BaseApiResponse<OperatorAuthTokenOutput> {
+  ): OperatorAuthTokenOutput {
     this.logger.log(ctx, `${this.login.name} was called`);
 
     const authToken = this.operatorAuthService.login(ctx);
-    return { data: authToken, meta: {} };
+    return authToken;
   }
 
   @Post('verify-otp')
@@ -82,13 +81,13 @@ export class OperatorAuthController {
   async verifyOtp(
     @ReqContext() ctx: RequestContext,
     @Body() input: OperatorAuthVerityOtpInput,
-  ): Promise<BaseApiResponse<OperatorAuthVerityOtpOutput>> {
+  ): Promise<OperatorAuthVerityOtpOutput> {
     const res = await this.operatorAuthService.verifyOtp(
       ctx,
       input.email,
       input.otp,
     );
-    return { data: res, meta: {} };
+    return res;
   }
 
   @Post('resend-otp')
@@ -106,9 +105,8 @@ export class OperatorAuthController {
   async resendOtp(
     @ReqContext() ctx: RequestContext,
     @Body() input: OperatorAuthResendOtpInput,
-  ): Promise<BaseApiResponse<void>> {
+  ): Promise<void> {
     await this.operatorAuthService.resendOtp(ctx, input.email);
-    return { data: null, meta: {} };
   }
 
   @Post('forgot-password')
@@ -126,9 +124,8 @@ export class OperatorAuthController {
   async forgotPassword(
     @ReqContext() ctx: RequestContext,
     @Body() input: OperatorForgotPasswordInput,
-  ): Promise<BaseApiResponse<void>> {
+  ): Promise<void> {
     await this.operatorAuthService.forgotPassword(ctx, input.email);
-    return { data: null, meta: {} };
   }
 
   @Post('reset-password')
@@ -146,9 +143,8 @@ export class OperatorAuthController {
   async resetPassword(
     @ReqContext() ctx: RequestContext,
     @Body() input: OperatorResetPasswordInput,
-  ): Promise<BaseApiResponse<void>> {
+  ): Promise<void> {
     await this.operatorAuthService.resetPassword(ctx, input);
-    return { data: null, meta: {} };
   }
 
   @Post('refresh-token')
@@ -170,10 +166,10 @@ export class OperatorAuthController {
     @ReqContext() ctx: RequestContext,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Body() credential: OperatorRefreshTokenInput,
-  ): Promise<BaseApiResponse<OperatorAuthTokenOutput>> {
+  ): Promise<OperatorAuthTokenOutput> {
     this.logger.log(ctx, `${this.refreshToken.name} was called`);
 
     const authToken = await this.operatorAuthService.refreshToken(ctx);
-    return { data: authToken, meta: {} };
+    return authToken;
   }
 }

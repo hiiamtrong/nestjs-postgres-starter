@@ -19,7 +19,6 @@ import {
 import { JwtUserAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import {
   BaseApiErrorResponse,
-  BaseApiResponse,
   SwaggerBaseApiResponse,
 } from '../../shared/dtos/base-api-response.dto';
 import { AppLogger } from '../../shared/logger/logger.service';
@@ -54,13 +53,11 @@ export class UserController {
     status: HttpStatus.UNAUTHORIZED,
     type: BaseApiErrorResponse,
   })
-  async getMyProfile(
-    @ReqContext() ctx: RequestContext,
-  ): Promise<BaseApiResponse<UserOutput>> {
+  async getMyProfile(@ReqContext() ctx: RequestContext): Promise<UserOutput> {
     this.logger.log(ctx, `${this.getMyProfile.name} was called`);
 
     const user = await this.userService.findById(ctx, ctx.user.id);
-    return { data: user, meta: {} };
+    return user;
   }
 
   @UseGuards(JwtUserAuthGuard)
@@ -81,10 +78,10 @@ export class UserController {
     @ReqContext() ctx: RequestContext,
     @Param('id') userId: number,
     @Body() input: UpdateUserInput,
-  ): Promise<BaseApiResponse<UserOutput>> {
+  ): Promise<UserOutput> {
     this.logger.log(ctx, `${this.updateUser.name} was called`);
 
     const user = await this.userService.updateUser(ctx, userId, input);
-    return { data: user, meta: {} };
+    return user;
   }
 }

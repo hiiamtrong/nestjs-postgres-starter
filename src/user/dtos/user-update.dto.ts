@@ -4,7 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  Length
+  Length,
 } from 'class-validator';
 import { UserStatus } from 'src/user/entities/user.entity';
 
@@ -32,19 +32,4 @@ export class BackofficeUpdateUserInput extends UpdateUserInput {
   @ApiPropertyOptional()
   @IsOptional()
   metadata: Record<string, any>;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNotEmpty()
-  balance: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNotEmpty()
-  lockedBalance: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNotEmpty()
-  pendingBalance: number;
 }

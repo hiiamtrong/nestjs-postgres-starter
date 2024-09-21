@@ -1,8 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
 import { QueryRunner } from 'typeorm';
 
+import {
+  AppExceptionCode,
+  getAppException,
+} from '../../shared/exceptions/app.exception';
 import { AppLogger } from '../../shared/logger/logger.service';
 import { RequestContext } from '../../shared/request-context/request-context.dto';
 import { CreateUserInput } from '../dtos/user-create.dto';
@@ -22,6 +26,7 @@ export class UserService {
   ) {
     this.logger.setContext(UserService.name);
   }
+
   async createUser(
     ctx: RequestContext,
     input: CreateUserInput,
@@ -29,12 +34,20 @@ export class UserService {
   ): Promise<UserOutput> {
     this.logger.log(ctx, `${this.createUser.name} was called`);
 
+    const existingUser = await this.repository.findOne({
+      where: { email: input.email },
+    });
+
+    if (existingUser) {
+      throw getAppException(AppExceptionCode.USER_EMAIL_ALREADY_EXISTS);
+    }
+
     const user = plainToInstance(User, input);
 
     user.password = await hash(input.password, 10);
 
     this.logger.log(ctx, `calling ${UserRepository.name}.saveUser`);
-
+    console.log(user);
     await this.repository
       .createQueryBuilder('user', queryRunner)
       .insert()
@@ -46,19 +59,19 @@ export class UserService {
     });
   }
 
-  async validatePhonePassword(
+  async validateEmailPassword(
     ctx: RequestContext,
-    phone: string,
+    email: string,
     pass: string,
   ): Promise<UserOutput> {
-    this.logger.log(ctx, `${this.validatePhonePassword.name} was called`);
+    this.logger.log(ctx, `${this.validateEmailPassword.name} was called`);
 
     this.logger.log(ctx, `calling ${UserRepository.name}.findOne`);
-    const user = await this.repository.findOne({ where: { phone } });
-    if (!user) throw new BadRequestException();
+    const user = await this.repository.findOne({ where: { email } });
+    if (!user) throw getAppException(AppExceptionCode.USER_NOT_FOUND);
 
     const match = await compare(pass, user.password);
-    if (!match) throw new BadRequestException();
+    if (!match) throw getAppException(AppExceptionCode.USER_PASSWORD_INCORRECT);
 
     return plainToInstance(UserOutput, user, {
       excludeExtraneousValues: true,
@@ -113,36 +126,17 @@ export class UserService {
     });
   }
 
-  async findByPhone(
+  async findByEmail(
     ctx: RequestContext,
-    phone: string,
+    email: string,
     queryRunner?: QueryRunner,
   ): Promise<UserOutput> {
-    this.logger.log(ctx, `${this.findByPhone.name} was called`);
+    this.logger.log(ctx, `${this.findByEmail.name} was called`);
 
     this.logger.log(ctx, `calling ${UserRepository.name}.findOne`);
     const user = await this.repository
       .createQueryBuilder('user', queryRunner)
-      .where('user.phone = :phone', { phone })
-      .getOne();
-
-    return plainToInstance(UserOutput, user, {
-      excludeExtraneousValues: true,
-    });
-  }
-
-  async findByUsername(
-    ctx: RequestContext,
-    username: string,
-    queryRunner?: QueryRunner,
-  ): Promise<UserOutput> {
-    this.logger.log(ctx, `${this.findByUsername.name} was called`);
-
-    this.logger.log(ctx, `calling ${UserRepository.name}.findOne`);
-
-    const user = this.repository
-      .createQueryBuilder('user', queryRunner)
-      .where('user.username = :username', { username })
+      .where('user.email = :email', { email })
       .getOne();
 
     return plainToInstance(UserOutput, user, {
@@ -166,7 +160,7 @@ export class UserService {
         where: { email: input.email },
       });
       if (emailUser && emailUser.id !== userId) {
-        throw new BadRequestException('Email already exists');
+        throw getAppException(AppExceptionCode.USER_EMAIL_ALREADY_EXISTS);
       }
       user.email = input.email;
     }

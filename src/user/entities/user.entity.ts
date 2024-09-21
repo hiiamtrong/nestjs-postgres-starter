@@ -1,10 +1,9 @@
+import { SnowflakeIdColumn } from 'src/shared/decorators/snowflake-id.decorator';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  Index,
-  PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
@@ -17,22 +16,14 @@ export enum UserStatus {
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
+  @SnowflakeIdColumn()
   id: number;
 
-  @Unique('username', ['username'])
+  @Unique('email', ['email'])
   @Column({ length: 200 })
-  username: string;
+  email: string;
 
-  @Unique('phone', ['phone'])
   @Column({ length: 200 })
-  phone: string;
-
-  @Index({ unique: true, where: 'email IS NOT NULL' })
-  @Column({ length: 200, nullable: true })
-  email?: string;
-
-  @Column()
   password: string;
 
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.PENDING })
@@ -40,27 +31,6 @@ export class User {
 
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, any>;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  balance: number;
-
-  @Column({
-    name: 'locked_balance',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  lockedBalance: number;
-
-  @Column({
-    name: 'pending_balance',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  pendingBalance: number;
 
   @Column({ name: 'updated_by', nullable: true })
   updatedBy: number;

@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Init1726764750238 implements MigrationInterface {
-    name = 'Init1726764750238';
+export class Init1726889336706 implements MigrationInterface {
+    name = 'Init1726889336706';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
@@ -31,37 +31,24 @@ export class Init1726764750238 implements MigrationInterface {
         `);
         await queryRunner.query(`
             CREATE TABLE "users" (
-                "id" SERIAL NOT NULL,
-                "username" character varying(200) NOT NULL,
-                "phone" character varying(200) NOT NULL,
-                "email" character varying(200),
-                "password" character varying NOT NULL,
+                "id" bigint NOT NULL,
+                "email" character varying(200) NOT NULL,
+                "password" character varying(200) NOT NULL,
                 "status" "public"."users_status_enum" NOT NULL DEFAULT 'pending',
                 "metadata" jsonb,
-                "balance" numeric(10, 2) NOT NULL DEFAULT '0',
-                "locked_balance" numeric(10, 2) NOT NULL DEFAULT '0',
-                "pending_balance" numeric(10, 2) NOT NULL DEFAULT '0',
                 "updated_by" integer,
                 "is_deleted" boolean NOT NULL DEFAULT false,
                 "deleted_by" integer,
                 "created_at" TIMESTAMP DEFAULT now(),
                 "updated_at" TIMESTAMP DEFAULT now(),
                 "deleted_at" TIMESTAMP,
-                CONSTRAINT "username" UNIQUE ("username"),
-                CONSTRAINT "phone" UNIQUE ("phone"),
+                CONSTRAINT "email" UNIQUE ("email"),
                 CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id")
             )
-        `);
-        await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_65cbf5fcb331619593ee334c7c" ON "users" ("email")
-            WHERE email IS NOT NULL
         `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
-            DROP INDEX "public"."IDX_65cbf5fcb331619593ee334c7c"
-        `);
         await queryRunner.query(`
             DROP TABLE "users"
         `);
