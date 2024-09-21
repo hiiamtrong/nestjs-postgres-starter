@@ -1,5 +1,5 @@
 {
-  "name": "spend-campaign-be",
+  "name": "nestjs-postgres-starter",
   "private": true,
   "version": "1.0.0",
   "description": "Spend Campaign Backend",
