@@ -47,7 +47,6 @@ export class UserService {
     user.password = await hash(input.password, 10);
 
     this.logger.log(ctx, `calling ${UserRepository.name}.saveUser`);
-    console.log(user);
     await this.repository
       .createQueryBuilder('user', queryRunner)
       .insert()
