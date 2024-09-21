@@ -23,6 +23,9 @@ export class AppException extends HttpException {
 }
 
 export enum AppExceptionCode {
+  BAD_REQUEST = '0400',
+  INTERNAL_SERVER_ERROR = '0500',
+
   USER_EMAIL_ALREADY_EXISTS = '1000',
   USER_NOT_FOUND = '1001',
   USER_PASSWORD_INCORRECT = '1002',
@@ -39,11 +42,21 @@ export enum AppExceptionCode {
   OPERATOR_OTP_INCORRECT = '2003',
   OPERATOR_PASSWORD_INCORRECT = '2004',
   OPERATOR_NOT_AUTHORIZED = '2005',
-
-  INTERNAL_SERVER_ERROR = '5000',
 }
 
 export const AppExceptions: Record<AppExceptionCode, AppException> = {
+  [AppExceptionCode.BAD_REQUEST]: new AppException(
+    AppExceptionCode.BAD_REQUEST,
+    'Bad request',
+    HttpStatus.BAD_REQUEST,
+  ),
+
+  [AppExceptionCode.INTERNAL_SERVER_ERROR]: new AppException(
+    AppExceptionCode.INTERNAL_SERVER_ERROR,
+    'Internal server error',
+    HttpStatus.INTERNAL_SERVER_ERROR,
+  ),
+
   [AppExceptionCode.USER_EMAIL_ALREADY_EXISTS]: new AppException(
     AppExceptionCode.USER_EMAIL_ALREADY_EXISTS,
     'User email already exists',
@@ -120,12 +133,6 @@ export const AppExceptions: Record<AppExceptionCode, AppException> = {
     AppExceptionCode.OPERATOR_NOT_AUTHORIZED,
     'Operator is not authorized',
     HttpStatus.FORBIDDEN,
-  ),
-
-  [AppExceptionCode.INTERNAL_SERVER_ERROR]: new AppException(
-    AppExceptionCode.INTERNAL_SERVER_ERROR,
-    'Internal server error',
-    HttpStatus.INTERNAL_SERVER_ERROR,
   ),
 };
 

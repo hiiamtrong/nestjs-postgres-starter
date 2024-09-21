@@ -43,7 +43,6 @@ export class AllExceptionsFilter<T> implements ExceptionFilter {
     let code: AppExceptionCode;
     // TODO : Based on language value in header, return a localized message.
     let localizedMessage: string;
-
     // TODO : Refactor the below cases into a switch case and tidy up error response creation.
     if (exception instanceof AppException) {
       statusCode = exception.getStatus();
@@ -57,6 +56,7 @@ export class AllExceptionsFilter<T> implements ExceptionFilter {
       statusCode = exception.getStatus();
       message = exception.message;
       details = exception.getResponse();
+      code = AppExceptionCode.INTERNAL_SERVER_ERROR;
     } else if (exception instanceof Error) {
       message = exception.message;
       stack = exception.stack;
